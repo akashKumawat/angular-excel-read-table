@@ -3,5 +3,13 @@ p {
 }
 
 table.sjs-table > tbody > tr:first-child > td {
-     background-color: lightgreen;
+  background-color: lightgreen;
+}
+
+table.sjs-table > tbody > tr {
+  height: 100px;
+}
+table.sjs-table > tbody > tr > td,
+th {
+  width: 200px;
 }

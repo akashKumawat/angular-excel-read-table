@@ -10,28 +10,7 @@ type AOA = any[][];
   templateUrl: './sheet.component.html'
 })
 export class SheetJSComponent implements OnInit {
-  data: AOA = [[1, 2], [3, 4]];
-  wopts: XLSX.WritingOptions = { bookType: 'xlsx', type: 'array' };
-  fileName: string = 'SheetJS.xlsx';
-
-  onFileChange(evt: any) {
-    /* wire up file reader */
-    // const target: DataTransfer = <DataTransfer>(evt.target);
-    // if (target.files.length !== 1) throw new Error('Cannot use multiple files');
-    // const reader: FileReader = new FileReader();
-    // reader.onload = (e: any) => {
-    //   /* read workbook */
-    //   const bstr: string = e.target.result;
-    //   const wb: XLSX.WorkBook = XLSX.read(bstr, { type: 'binary' });
-    //   /* grab first sheet */
-    //   const wsname: string = wb.SheetNames[0];
-    //   const ws: XLSX.WorkSheet = wb.Sheets[wsname];
-    //   /* save data */
-    //   this.data = <AOA>(XLSX.utils.sheet_to_json(ws, { header: 1 }));
-    //   console.log(this.data);
-    // };
-    // reader.readAsBinaryString(target.files[0]);
-  }
+  extractedData: AOA = [];
 
   load() {
     var url =
@@ -39,7 +18,7 @@ export class SheetJSComponent implements OnInit {
     var oReq = new XMLHttpRequest();
     oReq.open('GET', url, true);
     oReq.responseType = 'arraybuffer';
-
+    var readyData = [];
     oReq.onload = function(e) {
       var arraybuffer = oReq.response;
 
@@ -58,23 +37,30 @@ export class SheetJSComponent implements OnInit {
       /* Get worksheet */
       var worksheet = workbook.Sheets[first_sheet_name];
       let x = XLSX.utils.sheet_to_json(worksheet, { raw: false });
-      console.log(x);
+      const dataArray = [];
+      x.forEach(object => {
+        delete object['__EMPTY'];
+        delete object['__rowNum__'];
+        if (Object.keys(object).length !== 0) {
+          dataArray.push(object);
+        }
+      });
+      const dataValues = [];
+      dataArray.forEach((data, index) => {
+        if (index > 0) {
+          const values = [];
+          for (let value in data) {
+            values.push(data[value]);
+          }
+          readyData.push(values);
+        }
+      });
+      console.log('dataValues : ', readyData);
     };
-
+    this.extractedData = readyData;
     oReq.send();
   }
   ngOnInit() {
     this.load();
-  }
-  export(): void {
-    /* generate worksheet */
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet(this.data);
-
-    /* generate workbook and add the worksheet */
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
-
-    /* save to file */
-    XLSX.writeFile(wb, this.fileName);
   }
 }
